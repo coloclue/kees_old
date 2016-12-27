@@ -22,6 +22,15 @@ KEES IS AUTHORITIVE:
     of the 'blobs' to augment it with the 'dynamic' (read IRR or RPKI) portions
     of the configuration.
 
+The concept:
+------------
+
+    The YAML data in the `vars/` directory is transposed by the `gentool`
+    script through Jinja2 templates, to generate the final configuration.
+    The YAML data could of course also come from a real SQL database. The
+    final `/etc/bird` directory for each router ends up in in
+    `staged-configs/$router_name`, which can easily be rsynced.
+
 Repository layout:
 ------------------
 
