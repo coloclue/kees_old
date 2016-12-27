@@ -8,8 +8,8 @@ if [ ! -d filter-cache/rpki ]; then
     mkdir -p filter-cache/rpki
 fi
 
-rtrsub --afi ipv4 < ./templates/bird-rpki.j2 > filter-cache/rpki/rpki-ipv4.conf
-rtrsub --afi ipv6 < ./templates/bird-rpki.j2 > filter-cache/rpki/rpki-ipv6.conf
+rtrsub -r -c export.json --afi ipv4 < ./templates/bird-rpki.j2 > filter-cache/rpki/rpki-ipv4.conf
+rtrsub -r -c export.json --afi ipv6 < ./templates/bird-rpki.j2 > filter-cache/rpki/rpki-ipv6.conf
 
 for router in dcg-1.router.nl.coloclue.net dcg-2.router.nl.coloclue.net eunetworks-2.router.nl.coloclue.net; do
     rm -rf staged-configs/${router}

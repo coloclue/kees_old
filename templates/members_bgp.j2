@@ -1,4 +1,4 @@
-{%- set source_address = members_bgp_source[afi] -%}
+<%- set source_address = members_bgp_source[afi] -%>
 
 template bgp members {
     local as 8283;
@@ -6,37 +6,37 @@ template bgp members {
     import keep filtered;
     import none;
     next hop self;
-    source address {{ source_address }};
+    source address << source_address >>;
     import limit 100 action restart;
 }
-{{ "" }}
-{%- if afi == "ipv4" -%}{%- set max_length = 32 -%}
-{%- elif afi == "ipv6" -%}{%- set max_length = 128 -%}
-{%- endif -%}
+<< "" >>
+<%- if afi == "ipv4" -%><%- set max_length = 32 -%>
+<%- elif afi == "ipv6" -%><%- set max_length = 128 -%>
+<%- endif -%>
 
-{%- for profile in members_bgp -%}
-{{ "" }}
-# Begin {{ profile.comment }}
-function member_{{ profile.lid }}_valid() {
-    {%- for item in profile.accept -%}
-        {%- if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix) -%}
-            {%- if item.global == True %}
-    if net = {{ item.prefix }}/{{ item.length }} then {
+<%- for profile in members_bgp -%>
+<< "" >>
+# Begin << profile.comment >>
+function member_<< profile.lid >>_valid() {
+    <%- for item in profile.accept -%>
+        <%- if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix) -%>
+            <%- if item.global == True %>
+    if net = << item.prefix >>/<< item.length >> then {
         bgp_community.add((8283, 2));
         bgp_large_community.add((8283, 0, 2));
         return true;
     }
-            {%- endif -%}
-{{ "" }}
-    if net ~ [{{ item.prefix }}/{{ item.length }}{{ "{" }}{{ item.length }},{{ max_length }}{{ "}" }}] then {
+            <%- endif -%>
+<< "" >>
+    if net ~ [<< item.prefix >>/<< item.length >>{<< item.length >>,<< max_length >>}] then {
         return true;
     }
-        {%- endif -%}
-    {% endfor %}
+        <%- endif -%>
+    <% endfor %>
     return false;
 }
-filter member_{{ profile.lid }}_import {
-    if ! member_{{ profile.lid }}_valid() then reject;
+filter member_<< profile.lid >>_import {
+    if ! member_<< profile.lid >>_valid() then reject;
     if (65535, 666) ~ bgp_community then dest = RTD_BLACKHOLE;
     if (8283, 50) ~ bgp_community then bgp_local_pref = 50;
     if (8283, 150) ~ bgp_community then bgp_local_pref = 150;
@@ -44,24 +44,24 @@ filter member_{{ profile.lid }}_import {
     if (8283, 1, 150) ~ bgp_large_community then bgp_local_pref = 150;
     accept;
 }
-{{ "" }}
-    {%- for item in profile.sessions -%}
-        {%- for location, sessions in item.iteritems() -%}
-            {%- if location in hostname -%}
-                {%- for neighbor in sessions -%}
-                    {%- if (afi == "ipv4" and "." in neighbor) or (afi == "ipv6" and ":" in neighbor) -%}
+<< "" >>
+    <%- for item in profile.sessions -%>
+        <%- for location, sessions in item.iteritems() -%>
+            <%- if location in hostname -%>
+                <%- for neighbor in sessions -%>
+                    <%- if (afi == "ipv4" and "." in neighbor) or (afi == "ipv6" and ":" in neighbor) -%>
 
-protocol bgp member_{{ profile.lid }}_{{ loop.index }} from members {
-    description "{{ profile.comment }}";
-    neighbor {{ neighbor }} as {{ profile.as }};
-    import filter member_{{ profile.lid }}_import;
+protocol bgp member_<< profile.lid >>_<< loop.index >> from members {
+    description "<< profile.comment >>";
+    neighbor << neighbor >> as << profile.as >>;
+    import filter member_<< profile.lid >>_import;
 }
-{{ "" }}
-                    {%- endif -%}
-                {%- endfor -%}
-            {%- endif -%}
-        {%- endfor -%}
-    {%- endfor -%}
+<< "" >>
+                    <%- endif -%>
+                <%- endfor -%>
+            <%- endif -%>
+        <%- endfor -%>
+    <%- endfor -%>
 # End
 
-{% endfor -%}
+<% endfor -%>

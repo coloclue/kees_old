@@ -1,14 +1,14 @@
 protocol static {
-{%- for static in statics
+<%- for static in statics
     if (":" in static.route and afi == "ipv6")
     or ("." in static.route and afi == "ipv4")
-%}
-    {%- if static.via == "blackhole" %}
-    route {{ static.route }} blackhole;
-    {%- else %}
-    route {{ static.route }} via {{ static.via }};
-    {%- endif %}
-    {%- if static.comment %}  /* {{ static.comment }} */{% endif -%}
-    {%- endfor %}
+%>
+    <%- if static.via == "blackhole" %>
+    route << static.route >> blackhole;
+    <%- else %>
+    route << static.route >> via << static.via >>;
+    <%- endif %>
+    <%- if static.comment %>  /* << static.comment >> */<% endif -%>
+    <%- endfor %>
 }
 

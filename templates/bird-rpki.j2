@@ -1,4 +1,4 @@
-{#
+<#
     Variable examples:
     data = {
 		'2001:1320::/32': {
@@ -11,17 +11,17 @@
 			'origins': [0]
 		}
 	}
-#}
+#>
 
 function is_roa_covered_prefix()
 prefix set roas;
 {
      roas = [
-        {% for prefix in data -%}
-{{ prefix }}+
-{%- if not loop.last -%},{%- endif -%}
-{{ "\n        " }}
-{%- endfor %}
+        <% for prefix in data -%>
+<< prefix >>+
+<%- if not loop.last -%>,<%- endif -%>
+<< "\n        " >>
+<%- endfor %>
     ];
 
     if net ~ roas then {
@@ -32,17 +32,17 @@ prefix set roas;
 
 function complies_with_roa()
 {
-{%- for prefix in data %}
-    if net = {{ prefix }} then {
-{%- for origin in data[prefix]["origins"] %}
-{%- if origin == 0 %}
+<%- for prefix in data %>
+    if net = << prefix >> then {
+<%- for origin in data[prefix]["origins"] %>
+<%- if origin == 0 %>
         return false;
-{%- else %}
-        if bgp_path.last = {{ origin }} then return true;
-{%- endif %}
-{%- endfor %}
+<%- else %>
+        if bgp_path.last = << origin >> then return true;
+<%- endif %>
+<%- endfor %>
      }
-{%- endfor %}
+<%- endfor %>
      return false;
 }
 

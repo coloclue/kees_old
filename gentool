@@ -25,7 +25,13 @@ except ImportError:
 def render(tpl_path, context):
     path, filename = os.path.split(tpl_path)
     return Environment(
-        loader=FileSystemLoader(path or '/home/jenkins/workspace/update_router_configs/templates/')
+        loader=FileSystemLoader(path or '/home/jenkins/workspace/update_router_configs/templates/'),
+        block_start_string='<%',
+        block_end_string='%>',
+        variable_start_string='<<',
+        variable_end_string='>>',
+        comment_start_string='<#',
+        comment_end_string='#>'
     ).get_template(filename).render(context)
 
 
