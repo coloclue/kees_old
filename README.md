@@ -96,3 +96,8 @@ Dependencies:
     jinja2 - http://jinja.pocoo.org/
     hiyapyco - https://pypi.python.org/pypi/HiYaPyCo
     bgpq3  - https://github.com/snar/bgpq3
+
+Author:
+-------
+
+Copyright (c) 2014-2017, Job Snijders <job@instituut.net>
