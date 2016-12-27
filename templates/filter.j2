@@ -1,0 +1,57 @@
+filter peer_in_AS{{ asn }}_ipv{{ afi }}
+prefix set {{ prefix_set }};
+int set bogon_asns;
+{
+    # Scrub BLACKHOLE Community from peering partners
+    bgp_community.delete((65535, 666));
+
+    # ignore bogon AS_PATHs
+    bogon_asns = BOGON_ASNS;
+    if ( bgp_path ~ bogon_asns ) then {
+        print "Reject: bogon AS_PATH: ", net, " ", bgp_path;
+        reject;
+    }
+
+    include "AS{{ asn }}.prefixset.bird.ipv{{ afi }}";
+    if ( is_coloclue_more_specific() ) then {
+        print "Reject: 8283 more specific: ", net, " ", bgp_path, " filter: peer_in_AS{{ asn }}_ipv{{ afi }}";
+        reject;
+    }
+    if ( is_bogon() ) then {
+        print "Reject: bogon: ", net, " ", bgp_path, " filter: peer_in_AS{{ asn }}_ipv{{ afi }}";
+        reject;
+    }
+    if is_roa_covered_prefix() then {
+        if ! complies_with_roa() then {
+            /* print "Reject: ROA check failed for ", net, " ", bgp_path, " filter: peer_in_AS{{ asn }}_ipv{{ afi }}"; */
+            bgp_community.add((8283,100));
+            bgp_large_community.add((8283, 0, 100));
+        }
+    }
+    if (net ~ {{ prefix_set }}) then {
+        bgp_med = 0;
+{%- if ixp == "amsix" %}
+        bgp_local_pref = 100;
+{%- else %}
+        bgp_local_pref = 100;
+{%- endif %}
+{%- if peer_type == "peer" %}
+        # Scrub BGP Communities (RFC 7454 Section 11)
+        bgp_community.delete([(8283, *)]);
+        bgp_large_community.delete([(8283, *, *)]);
+
+        bgp_community.add((8283,1)); /* mark peering routes as peering routes */
+        bgp_large_community.add((8283, 0, 1)); /* mark peering routes as peering routes */
+{%- elif peer_type == "downstream" %}
+        bgp_community.add((8283,2));
+        bgp_large_community.add((8283,0, 2));
+        if (8283, 50) ~ bgp_community then bgp_local_pref = 50;
+        if (8283, 150) ~ bgp_community then bgp_local_pref = 150;
+        if (8283, 1, 50) ~ bgp_large_community then bgp_local_pref = 50;
+        if (8283, 1, 150) ~ bgp_large_community then bgp_local_pref = 150;
+{%- endif %}
+        accept;
+    }
+    print "Reject: No IRR? ", net, " ", bgp_path, " filter: peer_in_AS{{ asn }}_ipv{{ afi }}";
+    reject;
+}

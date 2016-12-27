@@ -1,0 +1,20 @@
+hostname: "dcg-1.router.nl.coloclue.net"
+
+router_id: "94.142.247.1"
+
+interfaces:
+  - "lo"        # loopback
+  - "eth2"      # backbone to dcg-2
+  - "eth4.100"  # members shared subnet
+  - "eth4.101"  # powerbars
+  - "eth4.201"  # Customer: Soleus
+  - "eth4.202"  # Axel Roest
+  - "eth4.203"  # Dimitri van Esch
+  - "eth4.205"  # An Ramkisoen
+  - "eth4.206"  # Melchior Aelmans
+  - "eth6.7"    # NL-IX
+  - "eth7"      # fusix transit
+
+members_bgp_source:
+  ipv4: "94.142.244.252"
+  ipv6: "2a02:898::d1"

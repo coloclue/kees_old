@@ -1,0 +1,260 @@
+#!/usr/bin/env python
+
+"""
+    KEES
+
+    The ColoClue Network Automation Toolchain
+
+    (c) 2014-2017 Job Snijders <job@instituut.net
+
+"""
+
+from subprocess import PIPE
+from subprocess import Popen as run
+from jinja2 import Environment, FileSystemLoader
+import ipaddr
+import os
+import requests
+import sys
+import time
+import yaml
+
+if 'all' in sys.argv:
+    all = True
+else:
+    all = None
+
+peerings_flat = open('vars/peers.yml', 'r')
+peerings = yaml.safe_load(peerings_flat)
+
+ixp_map = {
+    "amsix": [ipaddr.IPNetwork('80.249.208.0/21'),
+              ipaddr.IPNetwork('2001:7f8:1::/64')],
+    "nlix": [ipaddr.IPNetwork('193.239.116.0/22'),
+             ipaddr.IPNetwork('2001:7f8:13:0:0:0:0:0/64')],
+    "private-eun": [ipaddr.IPNetwork('62.115.144.32/31'),
+                    ipaddr.IPNetwork('2001:2000:3080:0EBC::/126')],
+    "multihop-eun": [ipaddr.IPNetwork('4.68.4.43/32'),
+                     ipaddr.IPNetwork('2001:1900::4:35/128')]
+}
+
+multihop_source_map = {
+    "eunetworks-2.router.nl.coloclue.net": {
+        "ipv4": "94.142.247.3",
+        "ipv6": "2a02:898:0:300::3"
+    },
+    "dcg-1.router.nl.coloclue.net": {
+        "ipv4": "94.142.247.1",
+        "ipv6": "2a02:898:0:300::1"
+    }
+}
+
+router_map = {
+    "amsix": ['eunetworks-2.router.nl.coloclue.net'],
+    "private-eun": ['eunetworks-2.router.nl.coloclue.net'],
+    "multihop-eun": ['eunetworks-2.router.nl.coloclue.net'],
+    "nlix": ['dcg-1.router.nl.coloclue.net', 'eunetworks-2.router.nl.coloclue.net']
+}
+
+vendor_map = {
+    "eunetworks-2.router.nl.coloclue.net": "bird",
+    "dcg-1.router.nl.coloclue.net": "bird"
+}
+
+bgp_passwords = {
+    "AS112": "largecommunitiesftw",
+    "AS15169": "XXX"
+}
+
+allow_upto = {
+    4: "24",
+    6: "48"
+}
+
+try:
+    os.chdir('filter-cache/')
+except:
+    print "filter-cache/ does not exist?"
+    sys.exit(2)
+
+def render(tpl_path, context):
+    path, filename = os.path.split(tpl_path)
+    return Environment(
+        loader=FileSystemLoader(path or '../templates/')
+    ).get_template(filename).render(context)
+
+
+def generate_filters(asn, as_set, irr_order):
+
+    # inner function for actual bgpq3 execution
+    def run_bgpq3(filename, v, as_set, vendor, flags, subterm, asn, irr_order):
+
+        if vendor == "-b":
+            stanza_name = "AUTOFILTER_%s_IPv%s%s" % (asn, v, subterm)
+        else:
+            stanza_name = "AUTOFILTER:%s:IPv%s%s" % (asn, v, subterm)
+
+        if flags:
+            p = run(["bgpq3", "-h", "rr.ntt.net", "-S", irr_order, "-R",
+                     allow_upto[v], "-%s" % v, vendor] + flags +
+                    ["-l", stanza_name, "-A"] + as_set, stdout=PIPE)
+        else:
+            p = run(["bgpq3", "-h", "rr.ntt.net", "-S", irr_order, "-R",
+                     allow_upto[v], "-%s" % v, vendor, "-l", stanza_name,
+                     "-A"] + as_set, stdout=PIPE)
+
+        f = open(filename, "w")
+        config = str(p.communicate()[0])
+        f.write(config)
+        f.close()
+
+    # BIRD IPv4
+    for v in [4, 6]:
+        if as_set == "ANY":
+            continue
+        filename = '%s.prefixset.bird.ipv%s' % (asn, v)
+        if os.path.exists(filename):
+            if time.time() - os.path.getmtime(filename) > 3600:
+                run_bgpq3(filename, v, as_set, '-b', None, "", asn, irr_order)
+                print "bird ipv%s refreshed: %s" % (v, filename)
+            else:
+                print "bird ipv%s cached: %s" % (v, filename)
+        else:
+            run_bgpq3(filename, v, as_set, '-b', None, "", asn, irr_order)
+            print "bird ipv%s created: %s" % (v, filename)
+
+seen_router_policy = []
+seen_bird_peers = {}
+
+
+def config_snippet(asn, peer, description, ixp, router, no_filter,
+                   export_full_table, limits, gtsm, peer_type,
+                   multihop, multihop_source_map):
+    if not peer_type in ['upstream', 'peer', 'downstream']:
+        print "ERROR: invalid peertype: %s for %s" % (peer_type, asn)
+        sys.exit(2)
+    as_number = asn.replace("AS", "")
+    global seen_router_policy
+    vendor = vendor_map[router]
+    v = ipaddr.IPAddress(peer).version
+    policy_name = "AUTOFILTER:%s:IPv%s" % (asn, v)
+
+    if vendor == "bird":
+        global seen_bird_peers
+        if asn not in seen_bird_peers:
+            seen_bird_peers[asn] = 0
+        else:
+            seen_bird_peers[asn] = seen_bird_peers[asn] + 1
+        peer_count = seen_bird_peers[asn]
+
+        if no_filter:
+            filter_name = "ebgp_unfiltered_peering_import"
+        else:
+            filter_name = "peer_in_%s_ipv%s" % (asn, v)
+
+        password = None
+        if asn in bgp_passwords:
+            password = bgp_passwords[asn]
+
+        limit = limits[v]
+
+        peer_info = {'asn': asn.replace('AS', ''), 'afi': v,
+                     'prefix_set': policy_name.replace(':', '_'),
+                     'neigh_ip': peer,
+                     'neigh_name': 'peer_%s_%s' % (asn, peer_count),
+                     'description': description,
+                     'filter_name': filter_name,
+                     'limit': limit,
+                     'gtsm': gtsm,
+                     'multihop': multihop,
+                     'password': password,
+                     'peer_type': peer_type,
+                     'source': multihop_source_map[router]["ipv%s" % v],
+                     'export_full_table': export_full_table,
+                     'ixp': ixp
+                     }
+
+        peer_config_blob = render('peer.j2', peer_info)
+        f = open('%s.ipv%s.config' % (router, v), "aw")
+        if not (router, asn, v) in seen_router_policy:
+            seen_router_policy.append((router, asn, v))
+            filter_config_blob = render('filter.j2', peer_info)
+            f.write(filter_config_blob)
+        f.write(peer_config_blob)
+        f.close()
+
+for router in vendor_map:
+    if vendor_map[router] == "bird":
+        try:
+            # dcg-1.router.nl.coloclue.net.ipv4.config
+            os.remove("%s.ipv4.config" % router)
+            os.remove("%s.ipv6.config" % router)
+        except OSError:
+            print "INFO: Config for %s wasn't present, no need to delete" % router
+    else:
+        try:
+            os.remove("%s.config" % router)
+        except OSError:
+            print "INFO: Config for %s wasn't present, no need to delete" % router
+
+for asn in peerings:
+
+    irr_order = "RIPE,AFRINIC,APNIC,NTTCOM,JPIRR,RADB,ARIN,TC,GT,BELL,LEVEL3,BBOI,ALTDB,RGNET"
+    if 'irr_order' in peerings[asn]:
+        irr_order = peerings[asn]['irr_order']
+
+    generate_filters(asn, peerings[asn]['import'].split(), irr_order)
+
+    for peer in peerings[asn]['peerings']:
+        for ixp in ixp_map:
+            for subnet in ixp_map[ixp]:
+                if ipaddr.IPAddress(peer) in subnet:
+                    print "found peer %s in IXP %s" % (peer, ixp)
+                    print "must deploy on %s" % " ".join(router_map[ixp])
+                    description = peerings[asn]['description']
+                    for router in router_map[ixp]:
+
+                        if 'type' in peerings[asn]:
+                            peer_type = peerings[asn]['type']
+                        else:
+                            peer_type = "peer"
+
+                        if peerings[asn]['import'] == "ANY":
+                            no_filter = True
+                        else:
+                            no_filter = False
+                        if peerings[asn]['export'] == "ANY":
+                            export_full_table = True
+                        else:
+                            export_full_table = False
+
+                        # set max prefix settings (if available)
+                        limits = {}
+                        if 'ipv4_limit' in peerings[asn]:
+                            limits[4] = peerings[asn]['ipv4_limit']
+                        else:
+                            limits[4] = 10000
+                        if 'ipv6_limit' in peerings[asn]:
+                            limits[6] = peerings[asn]['ipv6_limit']
+                        else:
+                            limits[6] = 1000
+
+                        gtsm = False
+                        if 'gtsm' in peerings[asn]:
+                            if peerings[asn]['gtsm']:
+                                gtsm = True
+                            # FreeBSD doesnt support GTSM on IPv6 ...
+                            if router == "dcg-1.router.nl.coloclue.net":
+                                gtsm = False
+
+                        multihop = False
+                        if 'multihop' in peerings[asn]:
+                            if peerings[asn]['multihop']:
+                                multihop = True
+
+                        config_snippet(asn, peer, description, ixp, router,
+                                       no_filter, export_full_table, limits,
+                                       gtsm, peer_type, multihop,
+                                       multihop_source_map)
+
+os.chdir('..')

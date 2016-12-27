@@ -1,0 +1,46 @@
+members_bgp:
+  - lid: 151
+    as: 65151
+    comment: "Mark Scholten"
+    sessions:
+      - "eunetworks":
+        - "94.142.240.146"
+        - "2a02:898:0:20::151:1"
+      - "dcg":
+        - "94.142.244.93"
+        - "2a02:898::151:1"
+    accept:
+      - prefix: "94.142.242.172"
+        length: 30
+      - prefix: "94.142.245.62"
+        length: 31
+      - prefix: "94.142.241.244"
+        length: 30
+      - prefix: "2a02:898:151::"
+        length: 48
+  - lid: 173
+    as: 57436
+    comment: "Samer"
+    sessions:
+      - "dcg":
+        - "94.142.244.29"
+        - "2a02:898::173:1"
+    accept:
+      - prefix: "185.19.151.0"
+        length: 24
+        global: true
+        comment: "Samers own public /24"
+      - prefix: "185.52.224.72"
+        length: 29
+      - prefix: "2001:678:110::"
+        length: 48
+        global: true
+      - prefix: "2001:678:114::"
+        length: 48
+        global: true
+      - prefix: "2001:678:118::"
+        length: 48
+        global: true
+      - prefix: "2001:67c:88::"
+        length: 48
+        global: true

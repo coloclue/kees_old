@@ -1,0 +1,18 @@
+hostname: "eunetworks-2.router.nl.coloclue.net"
+
+router_id: "94.142.247.3"
+
+interfaces:
+  - "lo"
+  - "eth0"
+  - "eth1.100"
+  - "eth1.101"
+  - "eth1.201"
+  - "eth5.992"
+  - "eth6"      # AMS-IX
+  - "eth7.7"    # NL-IX
+  - "eth8.104"
+
+members_bgp_source:
+  ipv4: "94.142.240.253"
+  ipv6: "2a02:898:0:20::e2"

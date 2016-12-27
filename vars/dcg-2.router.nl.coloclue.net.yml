@@ -1,0 +1,23 @@
+hostname: "dcg-2.router.nl.coloclue.net"
+
+router_id: "94.142.247.2"
+
+interfaces:
+  - "lo"
+  - "eth0.706"  # naar eunetworks
+  - "eth0.714"  # naar eunetworks
+  - "eth0.3837" # atom86 transit
+  - "eth2"      # naar dcg-1.router.nl.coloclue.net
+  - "eth4.100"  # leden vlan
+  - "eth4.101"
+  - "eth4.102"
+  - "eth4.201"
+  - "eth4.202"  # Axel Roest
+  - "eth4.203"
+  - "eth4.205"
+  - "eth4.206"
+  - "eth4.2481" # Tilaa OOB
+
+members_bgp_source:
+  ipv4: "94.142.244.253"
+  ipv6: "2a02:898::d2"

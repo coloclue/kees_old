@@ -1,0 +1,65 @@
+# The original is here:
+# 	https://raw.githubusercontent.com/coloclue/peering/master/peers.yaml
+
+AS3265:
+    description: XS4ALL
+    import: AS-ACCESSFORALL
+    export: "AS8283:AS-COLOCLUE"
+    peerings:
+        - 80.249.208.166
+        - 2001:7f8:1::a500:3265:1
+        - 80.249.208.48
+        - 2001:7f8:1::a500:3265:2
+
+AS196752:
+    description: Tilaa
+    import: AS-TILAA
+    export: "AS8283:AS-COLOCLUE"
+    peerings:
+        - 80.249.211.247
+        - 2001:7f8:1:0:a500:19:6752:1
+
+AS112:
+    description: AS112 Project (Hosted by RIPE NCC at AMS-IX)
+    import: AS112
+    export: "AS8283:AS-COLOCLUE"
+    ipv4_limit: 5
+    ipv6_limit: 5
+    peerings:
+        - 80.249.208.39
+        - 2001:7f8:1::a500:112:1
+
+AS47065:
+    description: BGPMUX / PEERING TestBed
+    import: AS-PEERING-TESTBED
+    export: ANY
+    ipv4_limit: 50
+    ipv6_limit: 50
+    type: downstream
+    peerings:
+        - 80.249.208.45
+        - 2001:7f8:1::a504:7065:1
+
+
+AS3356:
+    description: Level3
+    import: ANY
+    export: "AS8283:AS-COLOCLUE"
+    ipv4_limit: 330000
+    ipv6_limit: 25000
+    multihop: yes
+    peerings:
+        - 4.68.4.43
+        - 2001:1900::4:35
+
+AS49544:
+    description: I3D
+    import: AS-INTERACTIVE3D
+    export: "AS8283:AS-COLOCLUE"
+    peerings:
+        - 80.249.208.162
+        - 2001:7f8:1::a504:9544:1
+        - 193.239.117.76
+        - 2001:7f8:13::a504:9544:1
+        - 193.239.117.77
+        - 2001:7f8:13::a504:9544:2
