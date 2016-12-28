@@ -77,17 +77,17 @@ except:
     print "filter-cache/ does not exist?"
     sys.exit(2)
 
-
 def render(tpl_path, context):
     path, filename = os.path.split(tpl_path)
     return Environment(
         loader=FileSystemLoader(path or '../templates/'),
         block_start_string='<%',
         block_end_string='%>',
-        variable_start_string='<<',
-        variable_end_string='>>',
+        variable_start_string='<%=',
+        variable_end_string='%>',
         comment_start_string='<#',
-        comment_end_string='#>'
+        comment_end_string='#>',
+        line_statement_prefix="%%"
     ).get_template(filename).render(context)
 
 
