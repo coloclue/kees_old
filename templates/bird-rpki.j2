@@ -18,9 +18,9 @@ prefix set roas;
 {
      roas = [
 %% for prefix in data
-<%= prefix %>+
+        <%= prefix %>+
 <%- if not loop.last -%>,<%- endif -%>
-<%= "\n        " %>
+<%= "" %>
 %% endfor
     ];
 
