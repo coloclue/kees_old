@@ -1,14 +1,14 @@
-<%- if afi == "ipv4" -%>
-<%- set maxlength = 32 -%>
-<%- elif afi == "ipv6" -%>
-<%- set maxlength = 128 -%>
-<%- endif -%>
+%%  if afi == "ipv4"
+%%      set maxlength = 32
+%%  elif afi == "ipv6"
+%%      set maxlength = 128
+%%  endif
 filter only_loopbacks {
-<%- if afi == "ipv4" %>
+%%  if afi == "ipv4"
     if net ~ [ 94.142.247.0/28{32,32} ] then accept;
-<%- elif afi == "ipv6" %>
+%%  elif afi == "ipv6"
     if net ~ [ 2a02:898:0:300:0:0:0:0/64{128,128} ] then accept;
-<%- endif %>
+%%  endif
     reject;
 }
 
@@ -16,14 +16,12 @@ function is_coloclue_supernet()
 prefix set coloclue;
 {
     coloclue = [
-<%-
-for item in coloclue.supernets 
-if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-%>
+%% for item in coloclue.supernets 
+%%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
         << item.prefix >>/<< item.length >>
 <%- if not loop.last %>,<% endif -%>
 <%- if item.comment %>  /* << item.comment >> */<% endif -%>
-<%- endfor %>
+%% endfor
     ];
     if net ~ coloclue then return true;
     return false;
@@ -33,14 +31,12 @@ function is_coloclue_more_specific()
 prefix set coloclue;
 {
     coloclue = [
-<%-
-for item in coloclue.supernets
-if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-%>
+%% for item in coloclue.supernets
+%%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
         << item.prefix >>/<< item.length >>{<< item.length >>,<< maxlength >>}
 <%- if not loop.last %>,<% endif -%>
 <%- if item.comment %>  /* << item.comment >> */<% endif -%>
-<% endfor %>
+%% endfor
     ];
     if net ~ coloclue then return true;
     return false;
@@ -50,14 +46,12 @@ function is_bogon()
 prefix set bogons;
 {
     bogons = [
-<%-
-for item in bogons
-if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-%>
+%% for item in bogons
+%%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
         << item.prefix >>/<< item.length >>{<< item.length >>,<< maxlength >>}
 <%- if not loop.last %>,<% endif -%>
 <%- if item.comment %>  /* << item.comment >> */<% endif -%>
-<% endfor %>
+%% endfor
     ];
     if net ~ bogons then return true;
     return false;
@@ -84,11 +78,11 @@ int set bogon_asns;
         print "ROA check failed for ", net, " ASN ", bgp_path.last;
         reject;
     }
-<%- if afi == "ipv4" %>
+%% if afi == "ipv4"
     acceptable_sizes = [ 0.0.0.0/0{8,24} ];
-<%- elif afi == "ipv6" %>
+%% elif afi == "ipv6"
     acceptable_sizes = [ 2000::/3{12,48} ];
-<%- endif %>
+%% endif
     if ( net ~ acceptable_sizes ) then {
         bgp_med = 0;
         bgp_local_pref = 100;
