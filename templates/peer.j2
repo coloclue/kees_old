@@ -6,19 +6,19 @@ protocol bgp <%= neigh_name %> {
     receive limit <%= limit %> action restart;
     import keep filtered;
     import filter <%= filter_name %>;
-<%- if export_full_table %>
+%% if export_full_table
     export where full_table_export(<%= asn %>);
-<%- else %>
+%% else
     export where ebgp_peering_export(<%= asn %>);
-<%- endif %>
-<%- if password %>
+%% endif
+%% if password
     password "<%= password %>";
-<%- endif %>
-<%- if gtsm %>
+%% endif
+%% if gtsm
     ttl security on;
-<%- endif %>
-<%- if multihop %>
+%% endif
+%% if multihop
     multihop;
     source address <%= source %>;
-<%- endif %>
+%% endif
 }

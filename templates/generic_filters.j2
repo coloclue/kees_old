@@ -45,7 +45,7 @@ function ebgp_upstream_export(int peerasn) {
     
         accept;
     }
-<%- if hostname == "eunetworks-2.router.nl.coloclue.net" %>
+%% if hostname == "eunetworks-2.router.nl.coloclue.net"
     else if proto = "blackhole1" then {
         if (net.len = 32 && is_coloclue_more_specific()) then {
             bgp_community.add((38930,666));   # Fiberring blackhole
@@ -57,7 +57,7 @@ function ebgp_upstream_export(int peerasn) {
         }
         reject;
     }
-<%- endif %>
+%% endif
     reject;
 }
 

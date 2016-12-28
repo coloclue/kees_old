@@ -30,26 +30,26 @@ int set bogon_asns;
     }
     if (net ~ <%= prefix_set %>) then {
         bgp_med = 0;
-<%- if ixp == "amsix" %>
+%% if ixp == "amsix"
         bgp_local_pref = 100;
-<%- else %>
+%% else
         bgp_local_pref = 100;
-<%- endif %>
-<%- if peer_type == "peer" %>
+%% endif
+%% if peer_type == "peer"
         # Scrub BGP Communities (RFC 7454 Section 11)
         bgp_community.delete([(8283, *)]);
         bgp_large_community.delete([(8283, *, *)]);
 
         bgp_community.add((8283,1)); /* mark peering routes as peering routes */
         bgp_large_community.add((8283, 0, 1)); /* mark peering routes as peering routes */
-<%- elif peer_type == "downstream" %>
+%% elif peer_type == "downstream"
         bgp_community.add((8283,2));
         bgp_large_community.add((8283,0, 2));
         if (8283, 50) ~ bgp_community then bgp_local_pref = 50;
         if (8283, 150) ~ bgp_community then bgp_local_pref = 150;
         if (8283, 1, 50) ~ bgp_large_community then bgp_local_pref = 50;
         if (8283, 1, 150) ~ bgp_large_community then bgp_local_pref = 150;
-<%- endif %>
+%% endif
         accept;
     }
     print "Reject: No IRR? ", net, " ", bgp_path, " filter: peer_in_AS<%= asn %>_ipv<%= afi %>";
