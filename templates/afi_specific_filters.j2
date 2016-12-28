@@ -18,9 +18,9 @@ prefix set coloclue;
     coloclue = [
 %% for item in coloclue.supernets 
 %%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-        << item.prefix >>/<< item.length >>
+        <%= item.prefix %>/<%= item.length %>
 <%- if not loop.last %>,<% endif -%>
-<%- if item.comment %>  /* << item.comment >> */<% endif -%>
+<%- if item.comment %>  /* <%= item.comment %> */<% endif -%>
 %% endfor
     ];
     if net ~ coloclue then return true;
@@ -33,9 +33,9 @@ prefix set coloclue;
     coloclue = [
 %% for item in coloclue.supernets
 %%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-        << item.prefix >>/<< item.length >>{<< item.length >>,<< maxlength >>}
+        <%= item.prefix %>/<%= item.length %>{<%= item.length %>,<%= maxlength %>}
 <%- if not loop.last %>,<% endif -%>
-<%- if item.comment %>  /* << item.comment >> */<% endif -%>
+<%- if item.comment %>  /* <%= item.comment %> */<% endif -%>
 %% endfor
     ];
     if net ~ coloclue then return true;
@@ -48,9 +48,9 @@ prefix set bogons;
     bogons = [
 %% for item in bogons
 %%     if (afi == "ipv4" and "." in item.prefix) or (afi == "ipv6" and ":" in item.prefix)
-        << item.prefix >>/<< item.length >>{<< item.length >>,<< maxlength >>}
+        <%= item.prefix %>/<%= item.length %>{<%= item.length %>,<%= maxlength %>}
 <%- if not loop.last %>,<% endif -%>
-<%- if item.comment %>  /* << item.comment >> */<% endif -%>
+<%- if item.comment %>  /* <%= item.comment %> */<% endif -%>
 %% endfor
     ];
     if net ~ bogons then return true;

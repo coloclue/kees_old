@@ -4,11 +4,11 @@ protocol static {
     or ("." in static.route and afi == "ipv4")
 %>
     <%- if static.via == "blackhole" %>
-    route << static.route >> blackhole;
+    route <%= static.route %> blackhole;
     <%- else %>
-    route << static.route >> via << static.via >>;
+    route <%= static.route %> via <%= static.via %>;
     <%- endif %>
-    <%- if static.comment %>  /* << static.comment >> */<% endif -%>
+    <%- if static.comment %>  /* <%= static.comment %> */<% endif -%>
     <%- endfor %>
 }
 

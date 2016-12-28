@@ -1,24 +1,24 @@
-protocol bgp << neigh_name >> {
-    description "<< description >>";
-    neighbor << neigh_ip >> as << asn >>;
+protocol bgp <%= neigh_name %> {
+    description "<%= description %>";
+    neighbor <%= neigh_ip %> as <%= asn %>;
     local as 8283;
     next hop self;
-    receive limit << limit >> action restart;
+    receive limit <%= limit %> action restart;
     import keep filtered;
-    import filter << filter_name >>;
+    import filter <%= filter_name %>;
 <%- if export_full_table %>
-    export where full_table_export(<< asn >>);
+    export where full_table_export(<%= asn %>);
 <%- else %>
-    export where ebgp_peering_export(<< asn >>);
+    export where ebgp_peering_export(<%= asn %>);
 <%- endif %>
 <%- if password %>
-    password "<< password >>";
+    password "<%= password %>";
 <%- endif %>
 <%- if gtsm %>
     ttl security on;
 <%- endif %>
 <%- if multihop %>
     multihop;
-    source address << source >>;
+    source address <%= source %>;
 <%- endif %>
 }

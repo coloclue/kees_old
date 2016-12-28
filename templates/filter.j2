@@ -1,5 +1,5 @@
-filter peer_in_AS<< asn >>_ipv<< afi >>
-prefix set << prefix_set >>;
+filter peer_in_AS<%= asn %>_ipv<%= afi %>
+prefix set <%= prefix_set %>;
 int set bogon_asns;
 {
     # Scrub BLACKHOLE Community from peering partners
@@ -12,23 +12,23 @@ int set bogon_asns;
         reject;
     }
 
-    include "AS<< asn >>.prefixset.bird.ipv<< afi >>";
+    include "AS<%= asn %>.prefixset.bird.ipv<%= afi %>";
     if ( is_coloclue_more_specific() ) then {
-        print "Reject: 8283 more specific: ", net, " ", bgp_path, " filter: peer_in_AS<< asn >>_ipv<< afi >>";
+        print "Reject: 8283 more specific: ", net, " ", bgp_path, " filter: peer_in_AS<%= asn %>_ipv<%= afi %>";
         reject;
     }
     if ( is_bogon() ) then {
-        print "Reject: bogon: ", net, " ", bgp_path, " filter: peer_in_AS<< asn >>_ipv<< afi >>";
+        print "Reject: bogon: ", net, " ", bgp_path, " filter: peer_in_AS<%= asn %>_ipv<%= afi %>";
         reject;
     }
     if is_roa_covered_prefix() then {
         if ! complies_with_roa() then {
-            /* print "Reject: ROA check failed for ", net, " ", bgp_path, " filter: peer_in_AS<< asn >>_ipv<< afi >>"; */
+            /* print "Reject: ROA check failed for ", net, " ", bgp_path, " filter: peer_in_AS<%= asn %>_ipv<%= afi %>"; */
             bgp_community.add((8283,100));
             bgp_large_community.add((8283, 0, 100));
         }
     }
-    if (net ~ << prefix_set >>) then {
+    if (net ~ <%= prefix_set %>) then {
         bgp_med = 0;
 <%- if ixp == "amsix" %>
         bgp_local_pref = 100;
@@ -52,6 +52,6 @@ int set bogon_asns;
 <%- endif %>
         accept;
     }
-    print "Reject: No IRR? ", net, " ", bgp_path, " filter: peer_in_AS<< asn >>_ipv<< afi >>";
+    print "Reject: No IRR? ", net, " ", bgp_path, " filter: peer_in_AS<%= asn %>_ipv<%= afi %>";
     reject;
 }

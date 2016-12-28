@@ -17,7 +17,7 @@ function ebgp_peering_export(int peerasn) {
         || (8283, 0, 2) ~ bgp_large_community
         ) then {
 
-        << export_features() >>
+        <%= export_features() %>
         accept;
     }
     reject;
@@ -29,7 +29,7 @@ function ebgp_upstream_export(int peerasn) {
         || (8283, 0, 2) ~ bgp_large_community
         ) then {
 
-        << export_features() >>
+        <%= export_features() %>
 
         # prevent atom86 from sending route to NTT
         bgp_community.add((8455, 5523));
@@ -67,7 +67,7 @@ function full_table_export(int peerasn) {
     else if ( is_bogon() ) then reject;
     else if ( bgp_path.last = 8283 ) then reject;
     else {
-        << export_features () >>
+        <%= export_features () %>
         accept;
     }
 }

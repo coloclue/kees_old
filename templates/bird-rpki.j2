@@ -18,9 +18,9 @@ prefix set roas;
 {
      roas = [
         <% for prefix in data -%>
-<< prefix >>+
+<%= prefix %>+
 <%- if not loop.last -%>,<%- endif -%>
-<< "\n        " >>
+<%= "\n        " %>
 <%- endfor %>
     ];
 
@@ -33,12 +33,12 @@ prefix set roas;
 function complies_with_roa()
 {
 <%- for prefix in data %>
-    if net = << prefix >> then {
+    if net = <%= prefix %> then {
 <%- for origin in data[prefix]["origins"] %>
 <%- if origin == 0 %>
         return false;
 <%- else %>
-        if bgp_path.last = << origin >> then return true;
+        if bgp_path.last = <%= origin %> then return true;
 <%- endif %>
 <%- endfor %>
      }
