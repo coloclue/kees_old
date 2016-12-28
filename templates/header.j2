@@ -8,7 +8,7 @@ roa table rpki {
 protocol kernel {
     scan time 20;
     device routes;
-%% if hostname == "eunetworks-2.router.nl.coloclue.net" %%
+%% if hostname == "eunetworks-2.router.nl.coloclue.net"
     export filter {
         if proto = "blackhole1" then reject;
         accept;
