@@ -32,7 +32,8 @@ def render(tpl_path, context):
         variable_end_string='%>',
         comment_start_string='<#',
         comment_end_string='#>',
-        line_statement_prefix="%%"
+        line_statement_prefix='%%',
+        line_comment_prefix='##'
     ).get_template(filename).render(context)
 
 
